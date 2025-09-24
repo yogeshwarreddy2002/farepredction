@@ -1,0 +1,28 @@
+# Use the official Python 3.9 image as the base
+FROM python:3.9
+
+# Create a non-root user and switch to it
+# This is a security best practice and aligns with Hugging Face's template
+RUN useradd -m -u 1000 user
+USER user
+
+# Set environment variables for the user
+ENV PATH="/home/user/.local/bin:$PATH"
+ENV NAME World
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy requirements file and install dependencies as the non-root user
+COPY --chown=user ./requirements.txt requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+# Copy the rest of the application code
+COPY --chown=user . /app
+
+# Expose the port the app will run on
+EXPOSE 7860
+
+# Command to run the application using gunicorn
+# This tells gunicorn to run the 'app' object from the 'app.py' file
+CMD ["gunicorn", "--bind", "0.0.0.0:7860", "app:app"]
